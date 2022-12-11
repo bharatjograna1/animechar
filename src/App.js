@@ -19,27 +19,35 @@ function App() {
   //hook to call RestAPI on every change of parameter like page no and searched query
   //it is small module so we don't need to implement otherwise we have to use redux aur toolkit to manage data or states of project.
   useEffect(()=>{
+    const debounce = setTimeout(() => {
+      getDataAPI(pageNo, query);
+    }, 800);
 
-    axios.get(`https://api.jikan.moe/v4/characters?page=${pageNo}&limit=15&q=${query}&order_by=favorites&sort=desc`)
-      .then(function (response) {
-        setResponseData(response.data);
-      })
-      .catch(function (error) {
-        console.log(error);
-        setResponseData({});
-      });
+    return () => clearTimeout(debounce)
+  },[query]);
 
-  },[query, pageNo]);
+  //function to call a get data api
+  const getDataAPI = (page, q) => {
+    axios.get(`https://api.jikan.moe/v4/characters?page=${page}&limit=15&q=${q}&order_by=favorites&sort=desc`)
+    .then(function (response) {
+      setResponseData(response.data);
+    })
+    .catch(function (error) {
+      console.log(error);
+      setResponseData({});
+    });
+  }
 
   //function to handle onchange of searched query
   const handleSearchCharacter = (query) => {
-    setPageNo(0)
-    setQuery(query)
+    setPageNo(0);
+    setQuery(query);
   }
 
   //function to handle onclick of next and back button
   const handleOnClick = (page) => {
-    setPageNo(page)
+    setPageNo(page);
+    getDataAPI(page,query);
   }
 
   return (
@@ -47,12 +55,7 @@ function App() {
       <header className="App-header">
         <div className='header'>Search Anime Characters</div>
         <i className="fa fa-search icon"></i>
-        <input 
-          onChange={(e)=>
-            setTimeout(() => {
-              handleSearchCharacter(e.target.value)
-            }, 600)}
-        />
+        <input onChange={(e)=> handleSearchCharacter(e.target.value)} />
         <div className='total'>Total <b>{responseData.pagination?.items?.total || 0}</b> matching anime characters found</div>
       </header><hr></hr>
       <div>
